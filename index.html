@@ -54,7 +54,9 @@
             background:linear-gradient(90deg,var(--accent-blue),var(--accent-neon));
             -webkit-background-clip:text; -webkit-text-fill-color:transparent;
             letter-spacing:-0.3px;
+            display: flex; align-items: center; gap: 8px;
         }
+        .header-logo { height: 26px; filter: invert(1) brightness(1.5); }
         .sync-btn {
             display:flex; align-items:center; gap:6px;
             background:rgba(0,200,255,0.1); color:var(--accent-blue);
@@ -93,6 +95,30 @@
             cursor:pointer; transition:all 0.25s; font-family:'Inter',sans-serif;
         }
         .tab.active { background:rgba(0,200,255,0.12); color:var(--accent-blue); }
+
+        @media (max-width: 600px) {
+            .tabs {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+                z-index: 1000;
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+                padding-bottom: env(safe-area-inset-bottom, 15px);
+                padding-top: 10px;
+                background: var(--bg-dark);
+                border-top: 1px solid rgba(255,255,255,0.05);
+            }
+            .tab {
+                padding: 12px 0;
+                font-size: 13px;
+            }
+            .view {
+                padding-bottom: 120px;
+            }
+        }
 
         /* ─── VIEWS ─── */
         .view { display:none; padding:12px 14px 110px; max-width:600px; margin:0 auto; }
@@ -291,6 +317,108 @@
             background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .skeleton-card { height:60px; margin-bottom:12px; border-radius:var(--card-radius); }
+
+        /* ─── LIVE MATCH ANIMATION ─── */
+        @keyframes bounceBall { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        .live-ball { display:inline-block; animation:bounceBall 0.6s infinite; margin-left:6px; font-size:12px; }
+
+        /* ─── BRACKET VIEW (LLAVES) ─── */
+        .bracket-wrapper {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 0 40px;
+            gap: 24px;
+            scroll-snap-type: x mandatory;
+        }
+        .bracket-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-width: 145px;
+            gap: 8px;
+            scroll-snap-align: start;
+        }
+        .bracket-round-title {
+            text-align: center;
+            font-size: 11px;
+            color: var(--accent-neon);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+        .bracket-match {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .bracket-team {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            gap: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+        }
+        .bracket-team:last-child {
+            border-bottom: none;
+        }
+        .bracket-flag { width: 16px; height: 11px; object-fit: cover; border-radius: 2px; }
+        .bracket-score { margin-left: auto; font-weight: 800; font-family: 'Outfit', sans-serif; }
+        .bracket-fav { font-size: 10px; margin-left: 2px; }
+        .bracket-team.is-winner { background: rgba(0, 255, 102, 0.1); color: #fff; }
+        .bracket-team.is-winner .bracket-score { color: var(--accent-neon); }
+        .bracket-time {
+            font-size: 9px;
+            text-align: center;
+            padding: 3px;
+            background: rgba(0,0,0,0.2);
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bracket-time.is-live {
+            color: var(--danger);
+            font-weight: 800;
+        }
+
+        /* ─── BRACKET MOBILE ─── */
+        @media (max-width: 600px) {
+            .bracket-wrapper {
+                flex-direction: column;
+                overflow-x: visible;
+                gap: 16px;
+                padding: 4px 0 40px;
+            }
+            .bracket-col {
+                min-width: 100%;
+                gap: 6px;
+            }
+            .bracket-round-title {
+                font-size: 12px;
+                margin-bottom: 8px;
+                padding: 8px 0;
+                background: rgba(0,200,255,0.06);
+                border-radius: 8px;
+            }
+            .bracket-match {
+                border-radius: 10px;
+            }
+            .bracket-team {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            .bracket-flag { width: 20px; height: 14px; }
+            .bracket-score { font-size: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -298,7 +426,7 @@
 <header>
     <div class="header-top">
         <div>
-            <h1>⚽ World Cup 2026</h1>
+            <h1><img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/2026_FIFA_World_Cup_emblem_%28without_trophy%29.svg" alt="2026" class="header-logo"> Torneo Pro Stats <span style="opacity:0.3;font-weight:300;">|</span> FIFA World Cup 2026™</h1>
             <div class="header-sub">
                 <span class="live-dot" id="statusDot"></span>
                 <span id="statusText">Conectando...</span>
@@ -449,23 +577,26 @@ function formatDate(raw) {
     try {
         const [datePart, timePart] = raw.split(' ');
         const [mm, dd, yyyy] = datePart.split('/');
-        let hours = parseInt(timePart.split(':')[0]);
-        const mins = timePart.split(':')[1];
+        const [hh, min] = timePart.split(':');
+        
+        let d = new Date(yyyy, mm - 1, dd, hh, min);
+        // Ajuste horario Costa Rica (-2 horas)
+        d.setHours(d.getHours() - 2);
+
+        let hours = d.getHours();
+        const mins = d.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         if (hours > 12) hours -= 12;
         if (hours === 0) hours = 12;
         const timeStr = `${hours}:${mins} ${ampm}`;
 
-        // Check if date is Today
         const today = new Date();
-        const todayStr = `${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getDate().toString().padStart(2,'0')}/${today.getFullYear()}`;
+        const isToday = today.getDate() === d.getDate() && today.getMonth() === d.getMonth() && today.getFullYear() === d.getFullYear();
         
-        if (datePart === todayStr) {
-            return `Hoy, ${timeStr}`;
-        }
+        if (isToday) return `Hoy, ${timeStr}`;
 
-        const month = MONTHS_ES[parseInt(mm) - 1] || mm;
-        return `${parseInt(dd)} ${month}, ${timeStr}`;
+        const month = MONTHS_ES[d.getMonth()];
+        return `${d.getDate()} ${month}, ${timeStr}`;
     } catch(e) { return raw; }
 }
 
@@ -483,7 +614,9 @@ function parseDateSafely(raw) {
         const [datePart, timePart] = raw.split(' ');
         const [mm, dd, yyyy] = datePart.split('/');
         const [hh, min] = timePart.split(':');
-        return new Date(yyyy, mm - 1, dd, hh, min).getTime();
+        let d = new Date(yyyy, mm - 1, dd, hh, min);
+        d.setHours(d.getHours() - 2);
+        return d.getTime();
     } catch(e) { return 0; }
 }
 
@@ -524,11 +657,11 @@ function eloExpected(eloA, eloB) {
 }
 
 // Process all finished matches and compute current Elo ratings
+// Uses iterative convergence + explicit Strength of Schedule (SOS) adjustment
 function calculateElo() {
-    // Reset ratings
     eloRatings = {};
 
-    // Get only finished group-stage and knockout games, sorted chronologically
+    // Get only finished games, sorted chronologically
     const finished = gamesData
         .filter(g => g.finished === 'TRUE' && g.home_team_id && g.home_team_id !== '0')
         .sort((a, b) => {
@@ -537,33 +670,74 @@ function calculateElo() {
             return da - db;
         });
 
+    if (!finished.length) { eloCalculated = true; return; }
+
+    let ratings = {};
+    Object.keys(teamsMap).forEach(k => ratings[k] = BASE_ELO);
+
+    // ─── PASO 1: Elo Iterativo (7 pasadas) ───
+    // Cada pasada recalcula TODOS los ratings desde cero, pero usa los
+    // ratings de la pasada anterior para determinar el "score esperado".
+    // Esto significa que ganarle a un equipo que la pasada anterior
+    // identificó como fuerte otorga MÁS puntos Elo.
+    for (let iter = 0; iter < 7; iter++) {
+        let newRatings = {};
+        Object.keys(teamsMap).forEach(k => newRatings[k] = BASE_ELO);
+
+        finished.forEach(game => {
+            const hId = game.home_team_id;
+            const aId = game.away_team_id;
+            if (!hId || !aId || hId === '0' || aId === '0') return;
+
+            const hScore = parseInt(game.home_score) || 0;
+            const aScore = parseInt(game.away_score) || 0;
+            const G = gdMultiplier(Math.abs(hScore - aScore));
+
+            // Expected score usa ratings de la pasada ANTERIOR (SOS-aware)
+            const rH = ratings[hId] || BASE_ELO;
+            const rA = ratings[aId] || BASE_ELO;
+            const eH = eloExpected(rH, rA);
+            const eA = 1 - eH;
+
+            let wH, wA;
+            if (hScore > aScore)      { wH = 1;   wA = 0;   }
+            else if (hScore < aScore) { wH = 0;   wA = 1;   }
+            else                      { wH = 0.5; wA = 0.5; }
+
+            newRatings[hId] += (ELO_K * G * (wH - eH));
+            newRatings[aId] += (ELO_K * G * (wA - eA));
+        });
+        ratings = newRatings;
+    }
+
+    // ─── PASO 2: Ajuste explícito de Fuerza del Calendario (SOS) ───
+    // Para cada equipo, calcula el Elo promedio de sus rivales.
+    // Si tus rivales fueron fuertes (Elo alto), recibes un BONUS.
+    // Si tus rivales fueron débiles (Elo bajo), recibes una PENALIZACIÓN.
+    const opponents = {};
     finished.forEach(game => {
         const hId = game.home_team_id;
         const aId = game.away_team_id;
         if (!hId || !aId || hId === '0' || aId === '0') return;
-
-        const hScore = parseInt(game.home_score) || 0;
-        const aScore = parseInt(game.away_score) || 0;
-        const gd = Math.abs(hScore - aScore);
-        const G = gdMultiplier(gd);
-
-        const rH = eloRatings[hId] || 1500;
-        const rA = eloRatings[aId] || 1500;
-
-        const eH = eloExpected(rH, rA); // Expected for home
-        const eA = eloExpected(rA, rH); // Expected for away
-
-        // Actual result: 1=win, 0.5=draw, 0=loss
-        let wH, wA;
-        if (hScore > aScore)      { wH = 1;   wA = 0;   }
-        else if (hScore < aScore) { wH = 0;   wA = 1;   }
-        else                      { wH = 0.5; wA = 0.5; }
-
-        // Update ratings
-        eloRatings[hId] = Math.round(rH + ELO_K * G * (wH - eH));
-        eloRatings[aId] = Math.round(rA + ELO_K * G * (wA - eA));
+        if (!opponents[hId]) opponents[hId] = [];
+        if (!opponents[aId]) opponents[aId] = [];
+        opponents[hId].push(ratings[aId] || BASE_ELO);
+        opponents[aId].push(ratings[hId] || BASE_ELO);
     });
 
+    const playedTeams = Object.keys(opponents);
+    const globalAvg = playedTeams.length > 0
+        ? playedTeams.reduce((s, id) => s + (ratings[id] || BASE_ELO), 0) / playedTeams.length
+        : BASE_ELO;
+
+    const SOS_WEIGHT = 0.4; // 40% del diferencial de rivales se aplica como ajuste
+    playedTeams.forEach(id => {
+        const opps = opponents[id];
+        const avgOpp = opps.reduce((a, b) => a + b, 0) / opps.length;
+        ratings[id] += SOS_WEIGHT * (avgOpp - globalAvg);
+    });
+
+    Object.keys(ratings).forEach(k => eloRatings[k] = Math.round(ratings[k]));
     eloCalculated = true;
 }
 
@@ -622,6 +796,14 @@ function renderGroups() {
         return;
     }
 
+    const liveTeamIds = new Set();
+    gamesData.forEach(g => {
+        if (g.time_elapsed === 'live') {
+            liveTeamIds.add(g.home_team_id);
+            liveTeamIds.add(g.away_team_id);
+        }
+    });
+
     // If no groups open, open the ones with immediate upcoming or live matches
     if (openGroups.size === 0) {
         const activeGroups = new Set();
@@ -630,28 +812,29 @@ function renderGroups() {
         gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'live')
             .forEach(g => activeGroups.add(g.group));
             
-        // 2. Check today's games
+        // 2. Check today's upcoming games
         if (activeGroups.size === 0) {
             const today = new Date();
-            const todayStr = `${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getDate().toString().padStart(2,'0')}/${today.getFullYear()}`;
-            gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted' && g.local_date.startsWith(todayStr))
+            gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted')
+                .filter(g => {
+                    const d = new Date(parseDateSafely(g.local_date));
+                    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                })
                 .forEach(g => activeGroups.add(g.group));
         }
         
-        // 3. Fallback to closest future games
+        // 3. Fallback to closest future game's group
         if (activeGroups.size === 0) {
-            gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted')
-                .sort((a,b) => parseDateSafely(a.local_date) - parseDateSafely(b.local_date))
-                .forEach(g => activeGroups.add(g.group));
+            const nextMatch = gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted')
+                .sort((a,b) => parseDateSafely(a.local_date) - parseDateSafely(b.local_date))[0];
+            if (nextMatch) activeGroups.add(nextMatch.group);
         }
             
         const activeArray = Array.from(activeGroups);
         if (activeArray.length > 0) {
-            openGroups.add(activeArray[0]);
-            if (activeArray[1]) openGroups.add(activeArray[1]);
+            activeArray.forEach(g => openGroups.add(g));
         } else if (groupsData.length > 0) {
             openGroups.add(groupsData[0].name); 
-            if(groupsData[1]) openGroups.add(groupsData[1].name);
         }
     }
 
@@ -685,6 +868,7 @@ function renderGroups() {
                     ${flagImg(t.team_id)}
                     <span class="team-name">${teamName(t.team_id)}</span>
                     ${t._isFav ? '<span class="fav-star" style="margin-left:4px">⭐</span>' : ''}
+                    ${liveTeamIds.has(t.team_id) ? '<span class="live-ball" title="En vivo">⚽</span>' : ''}
                 </div></td>
                 <td>${t.mp}</td><td class="hide-mobile">${t.w}</td><td class="hide-mobile">${t.d}</td><td class="hide-mobile">${t.l}</td>
                 <td class="hide-mobile">${t.gf}</td><td class="hide-mobile">${t.ga}</td>
@@ -733,26 +917,52 @@ function renderMatches() {
         return db - da;
     });
 
-    // Only group stage games
-    const groupGames = sorted.filter(g => g.type === 'group');
-
     // Group by matchday
     let html = '';
     let currentMatchday = '';
 
-    // Info note about how probabilities work
-    html += `<div class="info-note">📊 <strong>Rendimiento en el Torneo (Elo)</strong> — Todos los equipos inician el Mundial en igualdad de condiciones (1500 puntos). Las probabilidades se calculan subiendo o bajando puntos basándose <strong>100% en sus resultados y diferencia de goles</strong> durante este torneo. Presiona <strong>Actualizar</strong> para recalcular con los últimos partidos finalizados.</div>`;
+    html += `<div class="info-note">📊 <strong>Rendimiento en el Torneo (Elo)</strong> — Todos los equipos inician el Mundial en igualdad de condiciones (1500 puntos). Las probabilidades se calculan subiendo o bajando puntos basándose <strong>100% en sus resultados y diferencia de goles</strong> durante este torneo.</div>`;
 
-    groupGames.forEach(game => {
-        const md = `Jornada ${game.matchday}`;
+    // Hypothetical teams logic for Knockout
+    let hypotheticals = {};
+    let thirdPlaces = [];
+    groupsData.forEach(g => {
+        const gName = g.name.replace('Group ', '').trim();
+        if (g.teams.length >= 1) hypotheticals[`Winner Group ${gName}`] = g.teams[0].team_id;
+        if (g.teams.length >= 2) hypotheticals[`Runner-up Group ${gName}`] = g.teams[1].team_id;
+        if (g.teams.length >= 3) thirdPlaces.push(g.teams[2]);
+    });
+    thirdPlaces.sort((a, b) => {
+        const pa = parseInt(a.pts)||0, pb = parseInt(b.pts)||0;
+        if (pb !== pa) return pb - pa;
+        const gda = parseInt(a.gd)||0, gdb = parseInt(b.gd)||0;
+        if (gdb !== gda) return gdb - gda;
+        return (parseInt(b.gf)||0) - (parseInt(a.gf)||0);
+    });
+    const bestThirds = thirdPlaces.slice(0, 8).map(t => t.team_id);
+    let thirdIndex = 0;
+
+    const roundsMap = { 'group': g => `Jornada ${g.matchday}`, 'r32': () => 'Treintaidosavos', 'r16': () => 'Octavos de Final', 'qf': () => 'Cuartos de Final', 'sf': () => 'Semifinales', 'third': () => 'Tercer Lugar', 'final': () => 'Gran Final' };
+
+    sorted.forEach(game => {
+        const md = roundsMap[game.type] ? roundsMap[game.type](game) : 'Partido';
         if (md !== currentMatchday) {
             currentMatchday = md;
-            const hasLive = groupGames.some(g => g.matchday === game.matchday && g.time_elapsed === 'live');
-            html += `<div class="match-day-header">${md} <span class="match-day-badge ${hasLive?'live-badge':''}">${hasLive?'🔴 EN VIVO':'Grupo '+game.group}</span></div>`;
+            const hasLive = sorted.some(g => (roundsMap[g.type]?roundsMap[g.type](g):'Partido') === md && g.time_elapsed === 'live');
+            html += `<div class="match-day-header">${md} <span class="match-day-badge ${hasLive?'live-badge':''}">${hasLive?'🔴 EN VIVO':(game.type==='group'?'Grupo '+game.group:'Fase Final')}</span></div>`;
         }
 
-        const hId = game.home_team_id;
-        const aId = game.away_team_id;
+        let hId = game.home_team_id;
+        let aId = game.away_team_id;
+        
+        if (!hId || hId === '0') {
+            if (game.home_team_label && game.home_team_label.startsWith('3rd')) hId = bestThirds[thirdIndex++] || hId;
+            else if (game.home_team_label) hId = hypotheticals[game.home_team_label] || hId;
+        }
+        if (!aId || aId === '0') {
+            if (game.away_team_label && game.away_team_label.startsWith('3rd')) aId = bestThirds[thirdIndex++] || aId;
+            else if (game.away_team_label) aId = hypotheticals[game.away_team_label] || aId;
+        }
         const hScore = game.home_score === 'null' || game.home_score === null ? '-' : game.home_score;
         const aScore = game.away_score === 'null' || game.away_score === null ? '-' : game.away_score;
         const isLive = game.time_elapsed === 'live';
@@ -813,83 +1023,141 @@ function renderKnockout() {
 
     groupsData.forEach(g => calcGroupProb(g));
 
-    const rounds = [
-        { type: 'r32', label: 'Treintaidosavos', emoji: '' },
-        { type: 'r16', label: 'Octavos de Final', emoji: '' },
-        { type: 'qf', label: 'Cuartos de Final', emoji: '' },
-        { type: 'sf', label: 'Semifinales', emoji: '' },
-        { type: 'third', label: 'Tercer Lugar', emoji: '🥉' },
-        { type: 'final', label: 'Gran Final', emoji: '🏆' }
-    ];
+    // Calculate hypothetical qualified teams based on current group standings
+    let hypotheticals = {};
+    let thirdPlaces = [];
+    groupsData.forEach(g => {
+        const gName = g.name.replace('Group ', '').trim();
+        if (g.teams.length >= 1) hypotheticals[`Winner Group ${gName}`] = g.teams[0].team_id;
+        if (g.teams.length >= 2) hypotheticals[`Runner-up Group ${gName}`] = g.teams[1].team_id;
+        if (g.teams.length >= 3) thirdPlaces.push(g.teams[2]);
+    });
+    // Sort 3rd places by FIFA tiebreakers
+    thirdPlaces.sort((a, b) => {
+        const pa = parseInt(a.pts)||0, pb = parseInt(b.pts)||0;
+        if (pb !== pa) return pb - pa;
+        const gda = parseInt(a.gd)||0, gdb = parseInt(b.gd)||0;
+        if (gdb !== gda) return gdb - gda;
+        return (parseInt(b.gf)||0) - (parseInt(a.gf)||0);
+    });
+    const bestThirds = thirdPlaces.slice(0, 8).map(t => t.team_id);
+    let thirdIndex = 0;
 
-    let html = '';
-    rounds.forEach(round => {
-        const games = gamesData.filter(g => g.type === round.type).sort((a,b) => {
-            const da = parseDateSafely(a.local_date);
-            const db = parseDateSafely(b.local_date);
-            if (a.time_elapsed === 'live' && b.time_elapsed !== 'live') return -1;
-            if (b.time_elapsed === 'live' && a.time_elapsed !== 'live') return 1;
-            return da - db; // Ascending: earliest first
-        });
-        if (!games.length) return;
-
-        const isGold = round.type === 'final';
-        html += `<div class="knockout-section">
-            <div class="round-title">${round.emoji} ${round.label} <span class="round-badge ${isGold?'gold':''}">${games.length} ${games.length===1?'partido':'partidos'}</span></div>`;
-
-        games.forEach(game => {
-            const hId = game.home_team_id;
-            const aId = game.away_team_id;
-            const hName = hId && hId !== '0' ? teamName(hId) : (game.home_team_label || 'TBD');
-            const aName = aId && aId !== '0' ? teamName(aId) : (game.away_team_label || 'TBD');
-            const hFlag = hId && hId !== '0' ? flagImg(hId, 'match-flag') : '❓';
-            const aFlag = aId && aId !== '0' ? flagImg(aId, 'match-flag') : '❓';
-            const hScore = game.home_score === 'null' || game.home_score === null || game.home_score === '0' && game.finished === 'FALSE' ? '-' : game.home_score;
-            const aScore = game.away_score === 'null' || game.away_score === null || game.away_score === '0' && game.finished === 'FALSE' ? '-' : game.away_score;
-            const isLive = game.time_elapsed === 'live';
-            const isFinished = game.finished === 'TRUE';
-            const notStarted = game.time_elapsed === 'notstarted';
-
-            let timeStr = '';
-            if (isLive) timeStr = '🔴 EN VIVO';
-            else if (isFinished) timeStr = 'Finalizado';
-            else timeStr = formatDate(game.local_date);
-
-            // Prob bar for games with known teams
-            let probBar = '';
-            let homeIsFav = false, awayIsFav = false;
-            if (hId && hId !== '0' && aId && aId !== '0') {
-                const { probA, probB } = headToHead(hId, aId);
-                homeIsFav = probA > probB;
-                awayIsFav = probB > probA;
-                probBar = `<div class="match-prob-bar">
-                    <div class="match-prob-fill-a" style="width:${probA}%"></div>
-                    <div class="match-prob-fill-b" style="width:${probB}%"></div>
-                </div>
-                <div class="match-prob-labels">
-                    <span class="match-prob-a">${probA}% ${homeIsFav?'<span class="match-fav-label">⭐ Favorito</span>':''}</span>
-                    <span class="match-prob-b">${awayIsFav?'<span class="match-fav-label">⭐ Favorito</span>':''} ${probB}%</span>
-                </div>`;
-            }
-
-            html += `<div class="match-card ${isLive?'live':''}">
-                <div class="match-row">
-                    <div class="match-team-left">${hFlag}<span class="match-team-name ${homeIsFav?'is-fav':''}">${hName}</span>${homeIsFav?'<span class="fav-star">⭐</span>':''}</div>
-                    <span class="match-score">${hScore}</span>
-                </div>
-                <div class="match-vs">VS</div>
-                <div class="match-row">
-                    <div class="match-team-left">${aFlag}<span class="match-team-name ${awayIsFav?'is-fav':''}">${aName}</span>${awayIsFav?'<span class="fav-star">⭐</span>':''}</div>
-                    <span class="match-score">${aScore}</span>
-                </div>
-                ${probBar}
-                <div class="match-time ${isLive?'live-text':''}">${timeStr}</div>
-            </div>`;
-        });
-        html += '</div>';
+    // Pre-resolve IDs chronologically to preserve the chronological assignment for 3rd places
+    const chronoSorted = [...gamesData].filter(g => g.type !== 'group').sort((a,b) => parseDateSafely(a.local_date) - parseDateSafely(b.local_date));
+    chronoSorted.forEach(game => {
+        let hId = game.home_team_id;
+        let aId = game.away_team_id;
+        if (!hId || hId === '0') {
+            if (game.home_team_label && game.home_team_label.startsWith('3rd')) hId = bestThirds[thirdIndex++] || hId;
+            else if (game.home_team_label) hId = hypotheticals[game.home_team_label] || hId;
+        }
+        if (!aId || aId === '0') {
+            if (game.away_team_label && game.away_team_label.startsWith('3rd')) aId = bestThirds[thirdIndex++] || aId;
+            else if (game.away_team_label) aId = hypotheticals[game.away_team_label] || aId;
+        }
+        game._resolvedHId = hId;
+        game._resolvedAId = aId;
     });
 
-    if (!html) html = `<div class="no-data"><div class="icon">🏟️</div><p>La fase eliminatoria aún no ha comenzado</p></div>`;
+    // Static structural order for FIFA World Cup 2026 bracket to align perfectly
+    const structOrder = {
+        'r32': [74, 77, 73, 75, 83, 84, 81, 82, 76, 78, 79, 80, 86, 88, 85, 87],
+        'r16': [89, 90, 93, 94, 91, 92, 95, 96],
+        'qf': [97, 98, 99, 100],
+        'sf': [101, 102],
+        'final': [104]
+    };
+
+    const rounds = [
+        { type: 'r32', label: '16avos' },
+        { type: 'r16', label: 'Octavos' },
+        { type: 'qf', label: 'Cuartos' },
+        { type: 'sf', label: 'Semis' },
+        { type: 'final', label: 'Final' }
+    ];
+
+    let html = '<div class="bracket-wrapper">';
+    
+    rounds.forEach(round => {
+        let roundGames = gamesData.filter(g => g.type === round.type);
+        if (roundGames.length === 0) return;
+        
+        // Sort by the strict structure order so the visual tree lines up
+        const orderArr = structOrder[round.type] || [];
+        roundGames.sort((a, b) => {
+            const indexA = orderArr.indexOf(parseInt(a.id));
+            const indexB = orderArr.indexOf(parseInt(b.id));
+            return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+        });
+
+        html += `<div class="bracket-col"><div class="bracket-round-title">${round.label}</div>`;
+
+        // If it's the final column, append the third place game to the array so it renders under the final
+        if (round.type === 'final') {
+            const thirdGame = gamesData.find(g => g.type === 'third');
+            if (thirdGame) roundGames.push(thirdGame); // Appends to the bottom of the final col
+        }
+
+        roundGames.forEach(game => {
+            let hId = game._resolvedHId;
+            let aId = game._resolvedAId;
+
+            let hName = hId && hId !== '0' ? teamName(hId) : (game.home_team_label || 'TBD');
+            let aName = aId && aId !== '0' ? teamName(aId) : (game.away_team_label || 'TBD');
+            
+            // Format labels for UI compactness
+            if (hName.includes('Group ')) hName = hName.replace('Group ', 'G');
+            if (aName.includes('Group ')) aName = aName.replace('Group ', 'G');
+            if (hName.includes('Winner Match ')) hName = hName.replace('Winner Match ', 'Ganador M');
+            if (aName.includes('Winner Match ')) aName = aName.replace('Winner Match ', 'Ganador M');
+
+            const hFlag = hId && hId !== '0' ? flagImg(hId, 'bracket-flag') : '';
+            const aFlag = aId && aId !== '0' ? flagImg(aId, 'bracket-flag') : '';
+            const hScoreRaw = game.home_score === 'null' || game.home_score === null || game.home_score === '0' && game.finished === 'FALSE' ? null : parseInt(game.home_score);
+            const aScoreRaw = game.away_score === 'null' || game.away_score === null || game.away_score === '0' && game.finished === 'FALSE' ? null : parseInt(game.away_score);
+            
+            const isLive = game.time_elapsed === 'live';
+            const isFinished = game.finished === 'TRUE';
+            
+            let hScoreStr = hScoreRaw !== null ? hScoreRaw : '';
+            let aScoreStr = aScoreRaw !== null ? aScoreRaw : '';
+            
+            let hWinnerClass = isFinished && hScoreRaw > aScoreRaw ? 'is-winner' : '';
+            let aWinnerClass = isFinished && aScoreRaw > hScoreRaw ? 'is-winner' : '';
+
+            // Favorite star based on Elo head-to-head
+            let hStar = '', aStar = '';
+            if (hId && hId !== '0' && aId && aId !== '0') {
+                const { probA, probB } = headToHead(hId, aId);
+                if (probA > probB) hStar = '<span class="bracket-fav">⭐</span>';
+                else if (probB > probA) aStar = '<span class="bracket-fav">⭐</span>';
+            }
+
+            let timeStr = '';
+            if (isLive) timeStr = '<div class="bracket-time is-live">🔴 En vivo</div>';
+            else if (isFinished) timeStr = '';
+            else if (game.type === 'third') timeStr = '<div class="bracket-time" style="color:var(--accent-blue)">🥉 Tercer Lugar</div>';
+            
+            html += `<div class="bracket-match">
+                ${timeStr}
+                <div class="bracket-team ${hWinnerClass}">
+                    ${hFlag} <span>${hName}</span>${hStar}
+                    <span class="bracket-score">${hScoreStr}</span>
+                </div>
+                <div class="bracket-team ${aWinnerClass}">
+                    ${aFlag} <span>${aName}</span>${aStar}
+                    <span class="bracket-score">${aScoreStr}</span>
+                </div>
+            </div>`;
+        });
+        
+        html += `</div>`; // .bracket-col
+    });
+    
+    html += '</div>'; // .bracket-wrapper
+
+    if (!gamesData.some(g => g.type === 'r32')) html = `<div class="no-data"><div class="icon">🏟️</div><p>La fase eliminatoria aún no ha comenzado</p></div>`;
     c.innerHTML = html;
 }
 
