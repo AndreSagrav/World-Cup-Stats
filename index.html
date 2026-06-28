@@ -331,6 +331,12 @@
             display: block;
             animation: viewSlideIn 0.4s var(--ease-out-expo);
         }
+        /* Knockout view needs full width for horizontal bracket scrolling */
+        #view-knockout.view {
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
         @keyframes viewSlideIn {
             from { opacity: 0; transform: translateY(16px) scale(0.99); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -689,6 +695,24 @@
             color: var(--accent-gold);
         }
 
+        /* ─── SWIPE HINT ─── */
+        .swipe-hint {
+            text-align: center;
+            font-size: 11px;
+            color: var(--accent-neon);
+            font-weight: 700;
+            padding: 8px 0;
+            margin-bottom: -10px;
+            animation: bounceLeftRight 2s infinite;
+        }
+        @keyframes bounceLeftRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+        @media (min-width: 601px) {
+            .hide-desktop { display: none !important; }
+        }
+
         /* ─── NO DATA ─── */
         .no-data {
             text-align: center; padding: 60px 20px;
@@ -969,7 +993,7 @@
 
     <div class="tabs-bg">
         <div class="tabs" id="tabBar">
-            <button class="tab active" onclick="switchView('groups')">📊 Grupos</button>
+            <button class="tab active" onclick="switchView('groups')">📊 Fase de Grupos</button>
             <button class="tab" onclick="switchView('matches')">⚽ Partidos</button>
             <button class="tab" onclick="switchView('knockout')">🏆 Fase Final</button>
         </div>
@@ -1170,7 +1194,8 @@ function teamName(id, label) {
 function teamFlag(id) { return teamsMap[id]?.flag || ''; }
 function flagImg(id, cls = 'team-flag') {
     const f = teamFlag(id);
-    return f ? `<img src="${f}" alt="" class="${cls}" loading="lazy">` : '🏳️';
+    const shieldSvg = `<svg viewBox="0 0 24 24" class="${cls}" style="fill: rgba(255,255,255,0.2); width: 16px; height: 16px;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`;
+    return f ? `<img src="${f}" alt="" class="${cls}" loading="lazy">` : shieldSvg;
 }
 
 // ═══════════════════════════════════════
@@ -1594,14 +1619,15 @@ function renderKnockout() {
     };
 
     const rounds = [
-        { type: 'r32', label: '16avos' },
+        { type: 'r32', label: 'Treintaidosavos' },
         { type: 'r16', label: 'Octavos' },
         { type: 'qf', label: 'Cuartos' },
         { type: 'sf', label: 'Semis' },
         { type: 'final', label: 'Final' }
     ];
 
-    let html = '<div class="bracket-wrapper">';
+    let html = '<div class="swipe-hint hide-desktop">👉 Deslizá para ver las siguientes rondas</div>';
+    html += '<div class="bracket-wrapper">';
     
     rounds.forEach(round => {
         let roundGames = gamesData.filter(g => g.type === round.type);
@@ -1634,8 +1660,8 @@ function renderKnockout() {
             let hName = teamName(hId, game.home_team_label);
             let aName = teamName(aId, game.away_team_label);
 
-            const hFlag = hId && hId !== '0' ? flagImg(hId, 'bracket-flag') : '';
-            const aFlag = aId && aId !== '0' ? flagImg(aId, 'bracket-flag') : '';
+            const hFlag = flagImg(hId, 'bracket-flag');
+            const aFlag = flagImg(aId, 'bracket-flag');
             const hScoreRaw = game.home_score === 'null' || game.home_score === null || game.home_score === '0' && game.finished === 'FALSE' ? null : parseInt(game.home_score);
             const aScoreRaw = game.away_score === 'null' || game.away_score === null || game.away_score === '0' && game.finished === 'FALSE' ? null : parseInt(game.away_score);
             
@@ -1659,7 +1685,10 @@ function renderKnockout() {
             let timeStr = '';
             if (isLive) timeStr = '<div class="bracket-time is-live">🔴 En vivo</div>';
             else if (isFinished) timeStr = '';
-            else if (game.type === 'third') timeStr = '<div class="bracket-time" style="color:var(--accent-blue)">🥉 Tercer Lugar</div>';
+            else {
+                let thirdBadge = game.type === 'third' ? '<span style="color:var(--accent-blue)">🥉 Tercer Lugar</span> • ' : '';
+                timeStr = `<div class="bracket-time">${thirdBadge}${formatDate(game.local_date)}</div>`;
+            }
             
             html += `<div class="bracket-match">
                 ${timeStr}
