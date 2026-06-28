@@ -1,0 +1,17 @@
+{
+    "name": "Torneo Pro Stats - World Cup 2026",
+    "short_name": "Torneo Pro Stats",
+    "description": "Estadísticas y probabilidades del Mundial 2026",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#0d1117",
+    "theme_color": "#0d1117",
+    "icons": [
+        {
+            "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/FIFA_World_Cup_2026_Logo.png/640px-FIFA_World_Cup_2026_Logo.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

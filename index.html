@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Torneo Pro Stats — FIFA World Cup 2026</title>
     <meta name="description" content="Estadísticas y probabilidades del Mundial 2026 en tiempo real">
+    <meta name="theme-color" content="#0d1117">
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -115,22 +117,24 @@
         /* ═══════════════════════════════════════
            HEADER — Premium Glassmorphism
         ═══════════════════════════════════════ */
-        header {
+        .sticky-header-group {
             position: sticky; top: 0; z-index: 100;
+        }
+        header {
             padding: max(env(safe-area-inset-top), 24px) 16px 10px;
             background: linear-gradient(180deg, rgba(8,11,18,0.95) 0%, rgba(8,11,18,0.88) 100%);
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        /* Subtle gradient line under header */
-        header::after {
+        /* Subtle gradient line under header group */
+        .sticky-header-group::after {
             content: '';
             position: absolute;
             bottom: -1px; left: 0; right: 0;
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(0,180,240,0.3), rgba(0,232,94,0.3), transparent);
             opacity: 0.6;
+            z-index: 2;
         }
 
         .header-top {
@@ -207,9 +211,16 @@
         /* ═══════════════════════════════════════
            TABS — Floating Dock (Mobile Bottom)
         ═══════════════════════════════════════ */
+        .tabs-bg {
+            background: rgba(8,11,18,0.88);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            padding: 0 16px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            position: relative;
+        }
         .tabs {
             display: flex; gap: 2px;
-            margin-top: 6px;
             background: rgba(255,255,255,0.025);
             border-radius: var(--radius-md);
             padding: 3px;
@@ -237,6 +248,13 @@
            MOBILE RESPONSIVE — CORE
         ═══════════════════════════════════════ */
         @media (max-width: 600px) {
+            .tabs-bg {
+                background: transparent;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                padding: 0;
+                border: none;
+            }
             .tabs {
                 position: fixed;
                 bottom: 0; left: 0; right: 0;
@@ -913,25 +931,29 @@
 </head>
 <body>
 
-<header>
-    <div class="header-top">
-        <div>
-            <h1><img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/2026_FIFA_World_Cup_emblem_%28without_trophy%29.svg" alt="2026" class="header-logo"> Torneo Pro Stats <span class="hide-mobile" style="opacity:0.3;font-weight:300;margin-left:4px;">|</span> <span class="hide-mobile">FIFA World Cup 2026™</span></h1>
-            <div class="header-sub">
-                <span class="live-dot" id="statusDot"></span>
-                <span id="statusText">Conectando...</span>
+<div class="sticky-header-group">
+    <header>
+        <div class="header-top">
+            <div>
+                <h1><img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/2026_FIFA_World_Cup_emblem_%28without_trophy%29.svg" alt="2026" class="header-logo"> Torneo Pro Stats <span class="hide-mobile" style="opacity:0.3;font-weight:300;margin-left:4px;">|</span> <span class="hide-mobile">FIFA World Cup 2026™</span></h1>
+                <div class="header-sub">
+                    <span class="live-dot" id="statusDot"></span>
+                    <span id="statusText">Conectando...</span>
+                </div>
             </div>
+            <button class="sync-btn" id="syncBtn" onclick="syncData()">
+                <span class="sync-icon">🔄</span> Actualizar
+            </button>
         </div>
-        <button class="sync-btn" id="syncBtn" onclick="syncData()">
-            <span class="sync-icon">🔄</span> Actualizar
-        </button>
-    </div>
-</header>
+    </header>
 
-<div class="tabs" id="tabBar">
-    <button class="tab active" onclick="switchView('groups')">📊 Grupos</button>
-    <button class="tab" onclick="switchView('matches')">⚽ Partidos</button>
-    <button class="tab" onclick="switchView('knockout')">🏆 Fase Final</button>
+    <div class="tabs-bg">
+        <div class="tabs" id="tabBar">
+            <button class="tab active" onclick="switchView('groups')">📊 Grupos</button>
+            <button class="tab" onclick="switchView('matches')">⚽ Partidos</button>
+            <button class="tab" onclick="switchView('knockout')">🏆 Fase Final</button>
+        </div>
+    </div>
 </div>
 
 <div class="view active" id="view-groups"></div>
@@ -1393,8 +1415,10 @@ function renderMatches() {
         const db = parseDateSafely(b.local_date);
         
         // 1. Live games
-        if (a.time_elapsed === 'live' && b.time_elapsed !== 'live') return -1;
-        if (b.time_elapsed === 'live' && a.time_elapsed !== 'live') return 1;
+        const aLive = a.time_elapsed !== 'notstarted' && a.finished !== 'TRUE' && a.time_elapsed;
+        const bLive = b.time_elapsed !== 'notstarted' && b.finished !== 'TRUE' && b.time_elapsed;
+        if (aLive && !bLive) return -1;
+        if (bLive && !aLive) return 1;
         
         // 2. Upcoming vs Finished
         if (a.time_elapsed === 'notstarted' && b.time_elapsed !== 'notstarted') return -1;
@@ -1438,8 +1462,9 @@ function renderMatches() {
         const md = roundsMap[game.type] ? roundsMap[game.type](game) : 'Partido';
         if (md !== currentMatchday) {
             currentMatchday = md;
-            const hasLive = sorted.some(g => (roundsMap[g.type]?roundsMap[g.type](g):'Partido') === md && g.time_elapsed === 'live');
-            html += `<div class="match-day-header">${md} <span class="match-day-badge ${hasLive?'live-badge':''}">${hasLive?'🔴 EN VIVO':(game.type==='group'?'Grupo '+game.group:'Fase Final')}</span></div>`;
+            const hasLive = sorted.some(g => (roundsMap[g.type]?roundsMap[g.type](g):'Partido') === md && g.time_elapsed !== 'notstarted' && g.finished !== 'TRUE' && g.time_elapsed);
+            const typeBadge = game.type === 'group' ? 'Fase de Grupos' : 'Fase Final';
+            html += `<div class="match-day-header">${md} <span class="match-day-badge ${hasLive?'live-badge':''}">${hasLive?'🔴 EN VIVO':typeBadge}</span></div>`;
         }
 
         let hId = game.home_team_id;
@@ -1455,12 +1480,20 @@ function renderMatches() {
         }
         const hScore = game.home_score === 'null' || game.home_score === null ? '-' : game.home_score;
         const aScore = game.away_score === 'null' || game.away_score === null ? '-' : game.away_score;
-        const isLive = game.time_elapsed === 'live';
         const isFinished = game.finished === 'TRUE';
         const notStarted = game.time_elapsed === 'notstarted';
+        const isLive = !notStarted && !isFinished && game.time_elapsed;
 
         let timeStr = '';
-        if (isLive) timeStr = '🔴 EN VIVO';
+        if (isLive) {
+            let elapsed = game.time_elapsed;
+            if (elapsed === 'ht' || elapsed === 'HT') timeStr = '🔴 MEDIO TIEMPO';
+            else if (elapsed === 'h1' || elapsed === '1h') timeStr = '🔴 1ER TIEMPO';
+            else if (elapsed === 'h2' || elapsed === '2h') timeStr = '🔴 2DO TIEMPO';
+            else if (elapsed === 'live' || elapsed === 'playing') timeStr = '🔴 EN VIVO';
+            else if (!isNaN(elapsed)) timeStr = `🔴 ${elapsed}'`;
+            else timeStr = `🔴 ${String(elapsed).toUpperCase()}`;
+        }
         else if (isFinished) timeStr = 'Finalizado';
         else timeStr = formatDate(game.local_date);
 
@@ -1478,7 +1511,7 @@ function renderMatches() {
                 </div>
                 <span class="match-score">${hScore}</span>
             </div>
-            <div class="match-vs">VS</div>
+            <div class="match-vs">${game.type === 'group' ? 'GRUPO ' + game.group : 'VS'}</div>
             <div class="match-row">
                 <div class="match-team-left">
                     ${flagImg(aId, 'match-flag')}
@@ -1671,6 +1704,15 @@ function toggleGroup(name) {
     // Then sync fresh data
     await syncData();
 })();
+
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
+        });
+    });
+}
 </script>
 </body>
 </html>
