@@ -1128,18 +1128,34 @@ function timeAgo(date) {
 }
 
 // Format raw API date "06/26/2026 19:00" → "26 Jun, 7:00 PM"
+const STADIUM_UTC_OFFSETS = {
+    '1': -6, '2': -6, '3': -6, // CST
+    '4': -5, '5': -5, '6': -5, // CDT
+    '7': -4, '8': -4, '9': -4, '10': -4, '11': -4, '12': -4, // EDT
+    '13': -7, '14': -7, '15': -7, '16': -7 // PDT
+};
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-function formatDate(raw) {
-    if (!raw) return '';
+
+// Safely parse API date string "06/26/2026 19:00" and stadium ID into an absolute timestamp
+function parseDateSafely(raw, stadiumId = '11') {
+    if (!raw) return 0;
     try {
         const [datePart, timePart] = raw.split(' ');
         const [mm, dd, yyyy] = datePart.split('/');
-        const [hh, min] = timePart.split(':');
-        
-        let d = new Date(yyyy, mm - 1, dd, hh, min);
-        // Ajuste horario Costa Rica (-2 horas)
-        d.setHours(d.getHours() - 2);
+        // Parse the raw string assuming UTC initially
+        const isoString = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${timePart}:00.000Z`;
+        let d = new Date(isoString);
+        // Correct to true UTC by applying the stadium's timezone offset
+        const stadiumOffset = STADIUM_UTC_OFFSETS[stadiumId] || -4;
+        d.setUTCHours(d.getUTCHours() - stadiumOffset);
+        return d.getTime();
+    } catch(e) { return 0; }
+}
 
+function formatDate(raw, stadiumId = '11') {
+    if (!raw) return '';
+    try {
+        const d = new Date(parseDateSafely(raw, stadiumId));
         let hours = d.getHours();
         const mins = d.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -1149,7 +1165,6 @@ function formatDate(raw) {
 
         const today = new Date();
         const isToday = today.getDate() === d.getDate() && today.getMonth() === d.getMonth() && today.getFullYear() === d.getFullYear();
-        
         if (isToday) return `Hoy, ${timeStr}`;
 
         const month = MONTHS_ES[d.getMonth()];
@@ -1162,19 +1177,6 @@ function showToast(msg, isError = false) {
     t.textContent = msg;
     t.className = 'toast show' + (isError ? ' error' : '');
     setTimeout(() => t.className = 'toast', 2500);
-}
-
-// Safely parse API date string "06/26/2026 19:00" into a timestamp
-function parseDateSafely(raw) {
-    if (!raw) return 0;
-    try {
-        const [datePart, timePart] = raw.split(' ');
-        const [mm, dd, yyyy] = datePart.split('/');
-        const [hh, min] = timePart.split(':');
-        let d = new Date(yyyy, mm - 1, dd, hh, min);
-        d.setHours(d.getHours() - 2);
-        return d.getTime();
-    } catch(e) { return 0; }
 }
 
 // ═══════════════════════════════════════
@@ -1233,9 +1235,7 @@ function calculateElo() {
     const finished = gamesData
         .filter(g => g.finished === 'TRUE' && g.home_team_id && g.home_team_id !== '0')
         .sort((a, b) => {
-            const da = new Date(a.local_date.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$1-$2'));
-            const db = new Date(b.local_date.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$1-$2'));
-            return da - db;
+            return parseDateSafely(a.local_date, a.stadium_id) - parseDateSafely(b.local_date, b.stadium_id);
         });
 
     if (!finished.length) { eloCalculated = true; return; }
@@ -1385,7 +1385,7 @@ function renderGroups() {
             const today = new Date();
             gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted')
                 .filter(g => {
-                    const d = new Date(parseDateSafely(g.local_date));
+                    const d = new Date(parseDateSafely(g.local_date, g.stadium_id));
                     return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
                 })
                 .forEach(g => activeGroups.add(g.group));
@@ -1394,7 +1394,7 @@ function renderGroups() {
         // 3. Fallback to closest future game's group
         if (activeGroups.size === 0) {
             const nextMatch = gamesData.filter(g => g.type === 'group' && g.time_elapsed === 'notstarted')
-                .sort((a,b) => parseDateSafely(a.local_date) - parseDateSafely(b.local_date))[0];
+                .sort((a,b) => parseDateSafely(a.local_date, a.stadium_id) - parseDateSafely(b.local_date, b.stadium_id))[0];
             if (nextMatch) activeGroups.add(nextMatch.group);
         }
             
@@ -1466,8 +1466,8 @@ function renderMatches() {
 
     // Sort: Live first -> Upcoming (closest date first) -> Finished (most recent first)
     const sorted = [...gamesData].sort((a, b) => {
-        const da = parseDateSafely(a.local_date);
-        const db = parseDateSafely(b.local_date);
+        const da = parseDateSafely(a.local_date, a.stadium_id);
+        const db = parseDateSafely(b.local_date, b.stadium_id);
         
         // 1. Live games
         const aLive = a.time_elapsed !== 'notstarted' && a.finished !== 'TRUE' && a.time_elapsed;
@@ -1526,7 +1526,7 @@ function renderMatches() {
             else timeStr = `🔴 ${String(elapsed).toUpperCase()}`;
         }
         else if (isFinished) timeStr = 'Finalizado';
-        else timeStr = formatDate(game.local_date);
+        else timeStr = formatDate(game.local_date, game.stadium_id);
 
         // Probability & favorite detection
         const { probA, probB } = headToHead(hId, aId);
@@ -1687,7 +1687,7 @@ function renderKnockout() {
             else if (isFinished) timeStr = '';
             else {
                 let thirdBadge = game.type === 'third' ? '<span style="color:var(--accent-blue)">🥉 Tercer Lugar</span> • ' : '';
-                timeStr = `<div class="bracket-time">${thirdBadge}${formatDate(game.local_date)}</div>`;
+                timeStr = `<div class="bracket-time">${thirdBadge}${formatDate(game.local_date, game.stadium_id)}</div>`;
             }
             
             html += `<div class="bracket-match">
