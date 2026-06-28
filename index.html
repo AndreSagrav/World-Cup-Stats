@@ -1625,6 +1625,35 @@ function renderMatches() {
 
     const roundsMap = { 'group': g => `Jornada ${g.matchday}`, 'r32': () => 'Treintaidosavos', 'r16': () => 'Octavos de Final', 'qf': () => 'Cuartos de Final', 'sf': () => 'Semifinales', 'third': () => 'Tercer Lugar', 'final': () => 'Gran Final' };
 
+    // Resolve knockout teams using STRICTLY REAL results for the Matches view
+    const realMatchResults = {};
+    const realHId = {};
+    const realAId = {};
+    for (let pass = 0; pass < 5; pass++) {
+        gamesData.forEach(game => {
+            if (game.type !== 'group') {
+                let hId = realHId[game.id] || game.home_team_id;
+                let aId = realAId[game.id] || game.away_team_id;
+                if ((!hId || hId === '0') && game.home_team_label) {
+                    hId = realMatchResults[game.home_team_label] || hId;
+                    realHId[game.id] = hId;
+                }
+                if ((!aId || aId === '0') && game.away_team_label) {
+                    aId = realMatchResults[game.away_team_label] || aId;
+                    realAId[game.id] = aId;
+                }
+                if (game.finished === 'TRUE') {
+                    const hScore = parseInt(game.home_score) || 0;
+                    const aScore = parseInt(game.away_score) || 0;
+                    const winnerId = hScore >= aScore ? hId : aId;
+                    const loserId = hScore >= aScore ? aId : hId;
+                    realMatchResults[`Winner Match ${game.id}`] = winnerId;
+                    realMatchResults[`Loser Match ${game.id}`] = loserId;
+                }
+            }
+        });
+    }
+
     sorted.forEach(game => {
         const md = roundsMap[game.type] ? roundsMap[game.type](game) : 'Partido';
         if (md !== currentMatchday) {
@@ -1637,9 +1666,9 @@ function renderMatches() {
         let hId = game.home_team_id;
         let aId = game.away_team_id;
         
-        // Also respect second pass resolution from renderKnockout if available
-        if (!hId || hId === '0') hId = game._resolvedHId || hId;
-        if (!aId || aId === '0') aId = game._resolvedAId || aId;
+        // Use strictly real resolved IDs, ignoring user predictions!
+        if (!hId || hId === '0') hId = realHId[game.id] || hId;
+        if (!aId || aId === '0') aId = realAId[game.id] || aId;
         const hScore = game.home_score === 'null' || game.home_score === null ? '-' : game.home_score;
         const aScore = game.away_score === 'null' || game.away_score === null ? '-' : game.away_score;
         const isFinished = game.finished === 'TRUE';
