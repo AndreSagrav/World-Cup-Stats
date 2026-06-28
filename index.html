@@ -1062,6 +1062,32 @@
         }
         .export-btn:hover { background: rgba(255,215,0,0.25); }
 
+        /* SEARCH BAR */
+        .search-container {
+            padding: 0 0 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--bg-main);
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .search-input:focus {
+            border-color: rgba(0, 180, 240, 0.5);
+            background: rgba(255,255,255,0.08);
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+
     </style>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
@@ -1101,7 +1127,12 @@
 </div>
 
 <div class="view active" id="view-groups"></div>
-<div class="view" id="view-matches"></div>
+<div class="view" id="view-matches">
+    <div class="search-container">
+        <input type="text" class="search-input" id="matchSearchInput" placeholder="Buscar país (ej. Panamá, España)..." oninput="filterMatches(this.value)">
+    </div>
+    <div id="view-matches-list"></div>
+</div>
 <div class="view" id="view-knockout"></div>
 
 <div class="toast" id="toast"></div>
@@ -1555,7 +1586,7 @@ function renderGroups() {
 //  RENDER: MATCHES
 // ═══════════════════════════════════════
 function renderMatches() {
-    const c = document.getElementById('view-matches');
+    const c = document.getElementById('view-matches-list');
     if (!gamesData.length) {
         c.innerHTML = `<div class="no-data"><div class="icon">📡</div><p>Presiona <strong>Actualizar</strong> para traer los datos</p></div>`;
         return;
@@ -1663,6 +1694,43 @@ function renderMatches() {
         </div>`;
     });
     c.innerHTML = html;
+    
+    // Re-apply filter if search input has text
+    const searchInput = document.getElementById('matchSearchInput');
+    if (searchInput && searchInput.value) {
+        filterMatches(searchInput.value);
+    }
+}
+
+function filterMatches(term) {
+    term = term.toLowerCase().trim();
+    // Normalize accents (e.g. Panamá -> panama)
+    const normalize = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    term = normalize(term);
+
+    const cards = document.querySelectorAll('#view-matches-list .match-card');
+    cards.forEach(card => {
+        const text = normalize(card.innerText.toLowerCase());
+        if (text.includes(term)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const headers = document.querySelectorAll('#view-matches-list .match-day-header');
+    headers.forEach(header => {
+        let nextEl = header.nextElementSibling;
+        let hasVisible = false;
+        while (nextEl && !nextEl.classList.contains('match-day-header')) {
+            if (nextEl.classList.contains('match-card') && nextEl.style.display !== 'none') {
+                hasVisible = true;
+                break;
+            }
+            nextEl = nextEl.nextElementSibling;
+        }
+        header.style.display = hasVisible ? '' : 'none';
+    });
 }
 
 // ═══════════════════════════════════════
