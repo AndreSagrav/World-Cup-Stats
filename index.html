@@ -1513,53 +1513,12 @@ function renderKnockout() {
 
     groupsData.forEach(g => calcGroupProb(g));
 
-    // Calculate hypothetical qualified teams based on current group standings
-    let hypotheticals = {};
-    let thirdPlaces = [];
-    groupsData.forEach(g => {
-        const gName = g.name.replace('Group ', '').trim();
-        if (g.teams.length >= 1) hypotheticals[`Winner Group ${gName}`] = g.teams[0].team_id;
-        if (g.teams.length >= 2) hypotheticals[`Runner-up Group ${gName}`] = g.teams[1].team_id;
-        if (g.teams.length >= 3) thirdPlaces.push(g.teams[2]);
-    });
-    // Sort 3rd places by FIFA tiebreakers
-    thirdPlaces.sort((a, b) => {
-        const pa = parseInt(a.pts)||0, pb = parseInt(b.pts)||0;
-        if (pb !== pa) return pb - pa;
-        const gda = parseInt(a.gd)||0, gdb = parseInt(b.gd)||0;
-        if (gdb !== gda) return gdb - gda;
-        return (parseInt(b.gf)||0) - (parseInt(a.gf)||0);
-    });
-    // Find teams that the API has already placed in the knockout stage
-    const alreadyPlaced = new Set();
-    gamesData.forEach(g => {
-        if (g.type !== 'group') {
-            if (g.home_team_id && g.home_team_id !== '0') alreadyPlaced.add(g.home_team_id);
-            if (g.away_team_id && g.away_team_id !== '0') alreadyPlaced.add(g.away_team_id);
+    // Simply use the teams provided by the API without guessing hypotheticals
+    gamesData.forEach(game => {
+        if (game.type !== 'group') {
+            game._resolvedHId = game.home_team_id;
+            game._resolvedAId = game.away_team_id;
         }
-    });
-
-    const bestThirds = thirdPlaces.slice(0, 8)
-        .map(t => t.team_id)
-        .filter(id => !alreadyPlaced.has(id)); // Exclude those already assigned!
-        
-    let thirdIndex = 0;
-
-    // Pre-resolve IDs chronologically to preserve the chronological assignment for 3rd places
-    const chronoSorted = [...gamesData].filter(g => g.type !== 'group').sort((a,b) => parseDateSafely(a.local_date) - parseDateSafely(b.local_date));
-    chronoSorted.forEach(game => {
-        let hId = game.home_team_id;
-        let aId = game.away_team_id;
-        if (!hId || hId === '0') {
-            if (game.home_team_label && game.home_team_label.startsWith('3rd')) hId = bestThirds[thirdIndex++] || hId;
-            else if (game.home_team_label) hId = hypotheticals[game.home_team_label] || hId;
-        }
-        if (!aId || aId === '0') {
-            if (game.away_team_label && game.away_team_label.startsWith('3rd')) aId = bestThirds[thirdIndex++] || aId;
-            else if (game.away_team_label) aId = hypotheticals[game.away_team_label] || aId;
-        }
-        game._resolvedHId = hId;
-        game._resolvedAId = aId;
     });
 
     // Static structural order for FIFA World Cup 2026 bracket to align perfectly
