@@ -1156,7 +1156,17 @@ function parseDateSafely(raw) {
 // ═══════════════════════════════════════
 //  TEAM HELPERS
 // ═══════════════════════════════════════
-function teamName(id) { return teamsMap[id]?.name || `Team ${id}`; }
+function teamName(id, label) {
+    if (!id || id === '0') {
+        if (label) {
+            // Translate English labels to Spanish if we want to show them, or just use "A definir"
+            // The user requested "A definir" specifically for unresolved teams.
+            return 'A definir';
+        }
+        return 'A definir';
+    }
+    return teamsMap[id]?.name || 'A definir';
+}
 function teamFlag(id) { return teamsMap[id]?.flag || ''; }
 function flagImg(id, cls = 'team-flag') {
     const f = teamFlag(id);
@@ -1621,14 +1631,8 @@ function renderKnockout() {
             let hId = game._resolvedHId;
             let aId = game._resolvedAId;
 
-            let hName = hId && hId !== '0' ? teamName(hId) : (game.home_team_label || 'TBD');
-            let aName = aId && aId !== '0' ? teamName(aId) : (game.away_team_label || 'TBD');
-            
-            // Format labels for UI compactness
-            if (hName.includes('Group ')) hName = hName.replace('Group ', 'G');
-            if (aName.includes('Group ')) aName = aName.replace('Group ', 'G');
-            if (hName.includes('Winner Match ')) hName = hName.replace('Winner Match ', 'Ganador M');
-            if (aName.includes('Winner Match ')) aName = aName.replace('Winner Match ', 'Ganador M');
+            let hName = teamName(hId, game.home_team_label);
+            let aName = teamName(aId, game.away_team_label);
 
             const hFlag = hId && hId !== '0' ? flagImg(hId, 'bracket-flag') : '';
             const aFlag = aId && aId !== '0' ? flagImg(aId, 'bracket-flag') : '';
