@@ -1713,9 +1713,12 @@ function renderKnockout() {
                     matchResults[`Loser Match ${game.id}`] = loserId;
                 } else if (predictions[game.id]) {
                     const winnerId = predictions[game.id];
-                    matchResults[`Winner Match ${game.id}`] = winnerId;
-                    if (winnerId === hId) matchResults[`Loser Match ${game.id}`] = aId;
-                    if (winnerId === aId) matchResults[`Loser Match ${game.id}`] = hId;
+                    // Validate that the predicted winner is actually playing in this match
+                    if (winnerId === hId || winnerId === aId) {
+                        matchResults[`Winner Match ${game.id}`] = winnerId;
+                        if (winnerId === hId) matchResults[`Loser Match ${game.id}`] = aId;
+                        if (winnerId === aId) matchResults[`Loser Match ${game.id}`] = hId;
+                    }
                 }
             }
         });
@@ -1818,7 +1821,12 @@ function renderKnockout() {
                 const hasPredictionFile = typeof window.MIS_PRONOSTICOS !== 'undefined';
                 const isCapturing = window.IS_CAPTURING === true;
                 const preds = hasPredictionFile ? window.MIS_PRONOSTICOS : (JSON.parse(localStorage.getItem('wc26_predictions')) || {});
-                const predictedWinner = preds[game.id] || '';
+                let predictedWinner = preds[game.id] || '';
+                
+                // If the saved prediction isn't one of the current teams (ghost prediction), ignore it
+                if (predictedWinner !== hId && predictedWinner !== aId) {
+                    predictedWinner = '';
+                }
                 
                 if (hasPredictionFile || isCapturing) {
                     if (predictedWinner) {
