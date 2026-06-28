@@ -312,8 +312,19 @@
             .header-logo { height: 18px; }
             .sync-btn { padding: 6px 11px; font-size: 10px; }
             header { padding-top: max(env(safe-area-inset-top), 24px); padding-bottom: 10px; }
-            .bracket-col { min-width: 82vw; scroll-snap-align: center; }
-            .bracket-wrapper { padding: 10px 4vw 40px; scroll-padding: 4vw; gap: 6vw; }
+            .bracket-col { min-width: 72vw; scroll-snap-align: center; }
+            .bracket-wrapper { padding: 8px 4vw 40px; scroll-padding: 4vw; gap: 3vw; }
+            .bracket-team { padding: 5px 6px; font-size: 10px; gap: 5px; }
+            .bracket-flag { width: 16px; height: 11px; }
+            .bracket-score { font-size: 12px; }
+            .bracket-round-title { font-size: 8px; padding: 4px 12px; letter-spacing: 1.5px; }
+            .bracket-round-title-wrapper { margin-bottom: 6px; }
+            .bracket-matches { gap: 3px; }
+            .bracket-time { font-size: 7px; padding: 2px 4px; }
+            .prediction-box { padding: 4px 6px; }
+            .prediction-box select { font-size: 10px; padding: 0 4px; height: 22px; }
+            .pred-label { font-size: 8px; }
+            .pred-winner { font-size: 11px; gap: 4px; }
         }
 
         /* ═══════════════════════════════════════
@@ -814,76 +825,95 @@
         }
 
         /* ═══════════════════════════════════════
-           BRACKET VIEW (LLAVES) — Premium
+           BRACKET VIEW (LLAVES) — Ultra Compact Premium
         ═══════════════════════════════════════ */
+        .bracket-toolbar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 10px 16px 6px;
+        }
+        .capture-btn {
+            background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(6,214,242,0.08));
+            border: 1px solid rgba(167,139,250,0.25);
+            color: var(--accent-purple);
+            padding: 6px 14px; border-radius: var(--radius-full);
+            font-size: 11px; font-weight: 700; cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.25s var(--ease-out-expo);
+        }
+        .capture-btn:hover { background: rgba(167,139,250,0.2); }
+        .capture-btn:active { transform: scale(0.94); }
         .bracket-wrapper {
             display: flex;
             overflow-x: auto;
-            padding: 14px 0 50px;
-            gap: 24px;
+            padding: 8px 16px 50px;
+            gap: 4px;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
+            align-items: stretch;
+        }
+        .col-final .bracket-matches {
+            justify-content: center !important;
+            gap: 30px !important;
         }
         .bracket-col {
             display: flex;
             flex-direction: column;
-            min-width: 260px;
+            min-width: 175px;
             scroll-snap-align: start;
+            position: relative;
         }
         .bracket-round-title-wrapper {
             position: sticky;
             top: 0; z-index: 10;
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
         .bracket-round-title {
             text-align: center;
             font-family: 'Outfit', sans-serif;
-            font-size: 11px;
-            color: var(--text-main);
+            font-size: 9px;
+            color: var(--text-secondary);
             text-transform: uppercase;
             font-weight: 800;
-            letter-spacing: 2.5px;
-            background: linear-gradient(135deg, rgba(0,180,240,0.08), rgba(0,232,94,0.05));
-            border: 1px solid rgba(255,255,255,0.08);
+            letter-spacing: 2px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: var(--radius-full);
-            padding: 8px 24px;
+            padding: 5px 16px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: var(--shadow-md);
         }
         .bracket-matches {
             display: flex;
             flex-direction: column;
             justify-content: space-around;
             flex: 1;
-            gap: 14px;
+            gap: 4px;
         }
         .bracket-match {
-            background: linear-gradient(160deg, var(--bg-card-elevated), var(--bg-card));
-            border: 1px solid var(--glass-border-light);
-            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: var(--shadow-md);
-            transition: all 0.3s var(--ease-out-expo);
+            transition: border-color 0.2s;
+            position: relative;
         }
         .bracket-match:active {
-            transform: scale(0.98);
-            box-shadow: var(--shadow-lg), var(--shadow-glow-blue);
-            border-color: rgba(0,180,240,0.25);
+            border-color: rgba(0,180,240,0.2);
         }
         .bracket-time {
-            font-size: 9px;
+            font-size: 8px;
             text-align: center;
-            padding: 5px 8px;
-            background: rgba(0,0,0,0.35);
+            padding: 3px 6px;
+            background: rgba(0,0,0,0.3);
             color: var(--text-muted);
             border-bottom: 1px solid rgba(255,255,255,0.03);
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             font-weight: 800;
         }
         .bracket-time.is-live {
@@ -894,38 +924,57 @@
         .bracket-team {
             display: flex;
             align-items: center;
-            padding: 11px 14px;
-            font-size: 13px;
+            padding: 6px 8px;
+            font-size: 11px;
             font-weight: 600;
-            gap: 10px;
+            gap: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.025);
             white-space: nowrap;
-            transition: background 0.2s;
         }
         .bracket-team:last-child { border-bottom: none; }
         .bracket-team.is-winner {
-            background: linear-gradient(90deg, rgba(0,232,94,0.06), rgba(0,180,240,0.04), transparent);
+            background: linear-gradient(90deg, rgba(0,232,94,0.06), transparent);
         }
         .bracket-team.is-winner span {
             color: #fff;
             font-weight: 800;
         }
         .bracket-flag {
-            width: 24px; height: 17px;
-            border-radius: 3px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            width: 18px; height: 13px;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.35);
             object-fit: cover;
         }
         .bracket-score {
             margin-left: auto;
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
-            font-size: 17px;
+            font-size: 13px;
             color: var(--accent-neon);
-            min-width: 20px;
+            min-width: 16px;
             text-align: center;
         }
-        .bracket-fav { font-size: 10px; margin-left: 2px; }
+        .bracket-fav { font-size: 8px; margin-left: 1px; }
+        /* Connector lines between rounds */
+        .bracket-col:not(:last-child) .bracket-match::after {
+            content: '';
+            position: absolute;
+            right: -5px; top: 50%;
+            width: 5px; height: 1px;
+            background: rgba(0,180,240,0.2);
+        }
+        .bracket-col:not(:first-child) .bracket-match::before {
+            content: '';
+            position: absolute;
+            left: -5px; top: 50%;
+            width: 5px; height: 1px;
+            background: rgba(0,180,240,0.2);
+        }
+        /* Hide desktop class on mobile */
+        .hide-desktop { }
+        @media (min-width: 601px) {
+            .hide-desktop { display: none !important; }
+        }
 
         /* ═══════════════════════════════════════
            STAGGERED ENTRY ANIMATION
@@ -970,50 +1019,51 @@
            PREDICTION BRACKET
         ═══════════════════════════════════════ */
         .prediction-box {
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.3);
             border-top: 1px solid rgba(255,255,255,0.03);
-            padding: 10px 14px;
+            padding: 5px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 6px;
         }
         .prediction-box select {
             flex: 1;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             color: #fff;
-            padding: 6px 10px;
-            border-radius: 6px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 5px;
             font-family: 'Inter', sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             outline: none;
-            appearance: none;
         }
         .prediction-box select option {
             background: var(--bg-card);
             color: #fff;
         }
         .prediction-box.readonly {
-            background: linear-gradient(90deg, rgba(255,215,0,0.05), transparent);
-            border-top-color: rgba(255,215,0,0.1);
+            background: linear-gradient(90deg, rgba(255,215,0,0.04), transparent);
+            border-top-color: rgba(255,215,0,0.08);
         }
-        .pred-label { font-size: 10px; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .pred-label { font-size: 8px; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .pred-winner {
-            display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #fff;
+            display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #fff;
         }
         .export-btn {
             background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,138,0,0.15));
             border: 1px solid rgba(255,215,0,0.3);
             color: var(--accent-gold);
-            padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;
+            padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;
+            font-family: 'Inter', sans-serif;
         }
         .export-btn:hover { background: rgba(255,215,0,0.25); }
 
     </style>
-    <script src="mis_pronosticos.js" onerror="window.MIS_PRONOSTICOS=undefined;"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1635,40 +1685,41 @@ function renderKnockout() {
         }
     });
 
-    // Second pass: resolve "Winner Match XX" / "Loser Match XX" from finished games
     const matchResults = {};
     const predictions = (typeof window.MIS_PRONOSTICOS !== 'undefined') ? window.MIS_PRONOSTICOS : (JSON.parse(localStorage.getItem('wc26_predictions')) || {});
     
-    gamesData.forEach(game => {
-        if (game.type !== 'group') {
-            if (game.finished === 'TRUE') {
-                const hScore = parseInt(game.home_score) || 0;
-                const aScore = parseInt(game.away_score) || 0;
-                const winnerId = hScore >= aScore ? (game._resolvedHId || game.home_team_id) : (game._resolvedAId || game.away_team_id);
-                const loserId = hScore >= aScore ? (game._resolvedAId || game.away_team_id) : (game._resolvedHId || game.home_team_id);
-                matchResults[`Winner Match ${game.id}`] = winnerId;
-                matchResults[`Loser Match ${game.id}`] = loserId;
-            } else if (predictions[game.id]) {
-                const winnerId = predictions[game.id];
-                matchResults[`Winner Match ${game.id}`] = winnerId;
-                const hId = game._resolvedHId || game.home_team_id;
-                const aId = game._resolvedAId || game.away_team_id;
-                if (winnerId === hId) matchResults[`Loser Match ${game.id}`] = aId;
-                if (winnerId === aId) matchResults[`Loser Match ${game.id}`] = hId;
-            }
-        }
-    });
+    // Evaluate tree multiple times to propagate winners/losers properly across all rounds
+    for (let pass = 0; pass < 5; pass++) {
+        gamesData.forEach(game => {
+            if (game.type !== 'group') {
+                // 1. Resolve IDs from previous matches if possible
+                if ((!game._resolvedHId || game._resolvedHId === '0') && game.home_team_label) {
+                    game._resolvedHId = matchResults[game.home_team_label] || game._resolvedHId;
+                }
+                if ((!game._resolvedAId || game._resolvedAId === '0') && game.away_team_label) {
+                    game._resolvedAId = matchResults[game.away_team_label] || game._resolvedAId;
+                }
 
-    gamesData.forEach(game => {
-        if (game.type !== 'group') {
-            if ((!game._resolvedHId || game._resolvedHId === '0') && game.home_team_label) {
-                game._resolvedHId = matchResults[game.home_team_label] || game._resolvedHId;
+                // 2. If we have a winner (real or predicted), propagate it
+                const hId = game._resolvedHId;
+                const aId = game._resolvedAId;
+
+                if (game.finished === 'TRUE') {
+                    const hScore = parseInt(game.home_score) || 0;
+                    const aScore = parseInt(game.away_score) || 0;
+                    const winnerId = hScore >= aScore ? hId : aId;
+                    const loserId = hScore >= aScore ? aId : hId;
+                    matchResults[`Winner Match ${game.id}`] = winnerId;
+                    matchResults[`Loser Match ${game.id}`] = loserId;
+                } else if (predictions[game.id]) {
+                    const winnerId = predictions[game.id];
+                    matchResults[`Winner Match ${game.id}`] = winnerId;
+                    if (winnerId === hId) matchResults[`Loser Match ${game.id}`] = aId;
+                    if (winnerId === aId) matchResults[`Loser Match ${game.id}`] = hId;
+                }
             }
-            if ((!game._resolvedAId || game._resolvedAId === '0') && game.away_team_label) {
-                game._resolvedAId = matchResults[game.away_team_label] || game._resolvedAId;
-            }
-        }
-    });
+        });
+    }
 
     // Static structural order for FIFA World Cup 2026 bracket to align perfectly
     const structOrder = {
@@ -1687,8 +1738,9 @@ function renderKnockout() {
         { type: 'final', label: 'Final' }
     ];
 
-    let html = '<div class="swipe-hint hide-desktop">👉 Deslizá para ver las siguientes rondas</div>';
-    html += '<div class="bracket-wrapper">';
+    let html = '<div class="swipe-hint hide-desktop" style="text-align:center;padding:6px;font-size:11px;color:var(--text-muted);">👉 Deslizá para ver las siguientes rondas</div>';
+    html += '<div class="bracket-toolbar"><button class="capture-btn" onclick="captureScreenshot()">📸 Capturar Bracket</button></div>';
+    html += '<div class="bracket-wrapper" id="bracketCapture">';
     
     rounds.forEach(round => {
         let roundGames = gamesData.filter(g => g.type === round.type);
@@ -1702,7 +1754,7 @@ function renderKnockout() {
             return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
         });
 
-        html += `<div class="bracket-col">
+        html += `<div class="bracket-col ${round.type === 'final' ? 'col-final' : ''}">
             <div class="bracket-round-title-wrapper">
                 <div class="bracket-round-title">${round.label}</div>
             </div>
@@ -1764,10 +1816,11 @@ function renderKnockout() {
             
             if (!isFinished && hId && hId !== '0' && aId && aId !== '0') {
                 const hasPredictionFile = typeof window.MIS_PRONOSTICOS !== 'undefined';
+                const isCapturing = window.IS_CAPTURING === true;
                 const preds = hasPredictionFile ? window.MIS_PRONOSTICOS : (JSON.parse(localStorage.getItem('wc26_predictions')) || {});
                 const predictedWinner = preds[game.id] || '';
                 
-                if (hasPredictionFile) {
+                if (hasPredictionFile || isCapturing) {
                     if (predictedWinner) {
                         const wName = teamName(predictedWinner, '');
                         const wFlag = flagImg(predictedWinner, 'bracket-flag');
@@ -1861,6 +1914,59 @@ if ('serviceWorker' in navigator) {
 
 // PWA Install Prompt
 let deferredPrompt;
+
+async function captureScreenshot() {
+    // Hide dropdowns temporarily for a clean screenshot
+    window.IS_CAPTURING = true;
+    renderKnockout();
+
+    // Wait a brief moment for the DOM to update
+    await new Promise(r => setTimeout(r, 50));
+
+    const el = document.getElementById('bracketCapture');
+    if (!el) { 
+        window.IS_CAPTURING = false; 
+        renderKnockout();
+        showToast('No hay bracket para capturar', true); 
+        return; 
+    }
+    showToast('⏳ Generando imagen...');
+    try {
+        // Force full scroll width visible
+        const origOverflow = el.style.overflow;
+        const origWidth = el.style.width;
+        const origMinW = el.style.minWidth;
+        el.style.overflow = 'visible';
+        el.style.width = el.scrollWidth + 'px';
+        el.style.minWidth = el.scrollWidth + 'px';
+        
+        const canvas = await html2canvas(el, {
+            backgroundColor: '#080b12',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            width: el.scrollWidth,
+            windowWidth: el.scrollWidth + 100
+        });
+        
+        el.style.overflow = origOverflow;
+        el.style.width = origWidth;
+        el.style.minWidth = origMinW;
+        
+        const link = document.createElement('a');
+        link.download = 'bracket_mundial_2026.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('✅ Imagen descargada');
+    } catch(e) {
+        console.error('Screenshot error:', e);
+        showToast('❌ Error al capturar', true);
+    } finally {
+        // Restore interactive dropdowns
+        window.IS_CAPTURING = false;
+        renderKnockout();
+    }
+}
 
 function savePrediction(gameId, winnerId) {
     const preds = JSON.parse(localStorage.getItem('wc26_predictions')) || {};
