@@ -966,7 +966,54 @@
             outline-offset: 2px;
         }
 
+        /* ═══════════════════════════════════════
+           PREDICTION BRACKET
+        ═══════════════════════════════════════ */
+        .prediction-box {
+            background: rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255,255,255,0.03);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .prediction-box select {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+        }
+        .prediction-box select option {
+            background: var(--bg-card);
+            color: #fff;
+        }
+        .prediction-box.readonly {
+            background: linear-gradient(90deg, rgba(255,215,0,0.05), transparent);
+            border-top-color: rgba(255,215,0,0.1);
+        }
+        .pred-label { font-size: 10px; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .pred-winner {
+            display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #fff;
+        }
+        .export-btn {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,138,0,0.15));
+            border: 1px solid rgba(255,215,0,0.3);
+            color: var(--accent-gold);
+            padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .export-btn:hover { background: rgba(255,215,0,0.25); }
+
     </style>
+    <script src="mis_pronosticos.js" onerror="window.MIS_PRONOSTICOS=undefined;"></script>
 </head>
 <body>
 
@@ -981,6 +1028,9 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="export-btn" id="exportBtn" style="display:none;" onclick="exportPredictions()">
+                    💾 Fijar Pronósticos
+                </button>
                 <button class="install-btn" id="installBtn" style="display:none;">
                     📲 Instalar
                 </button>
@@ -1587,14 +1637,25 @@ function renderKnockout() {
 
     // Second pass: resolve "Winner Match XX" / "Loser Match XX" from finished games
     const matchResults = {};
+    const predictions = (typeof window.MIS_PRONOSTICOS !== 'undefined') ? window.MIS_PRONOSTICOS : (JSON.parse(localStorage.getItem('wc26_predictions')) || {});
+    
     gamesData.forEach(game => {
-        if (game.type !== 'group' && game.finished === 'TRUE') {
-            const hScore = parseInt(game.home_score) || 0;
-            const aScore = parseInt(game.away_score) || 0;
-            const winnerId = hScore >= aScore ? (game._resolvedHId || game.home_team_id) : (game._resolvedAId || game.away_team_id);
-            const loserId = hScore >= aScore ? (game._resolvedAId || game.away_team_id) : (game._resolvedHId || game.home_team_id);
-            matchResults[`Winner Match ${game.id}`] = winnerId;
-            matchResults[`Loser Match ${game.id}`] = loserId;
+        if (game.type !== 'group') {
+            if (game.finished === 'TRUE') {
+                const hScore = parseInt(game.home_score) || 0;
+                const aScore = parseInt(game.away_score) || 0;
+                const winnerId = hScore >= aScore ? (game._resolvedHId || game.home_team_id) : (game._resolvedAId || game.away_team_id);
+                const loserId = hScore >= aScore ? (game._resolvedAId || game.away_team_id) : (game._resolvedHId || game.home_team_id);
+                matchResults[`Winner Match ${game.id}`] = winnerId;
+                matchResults[`Loser Match ${game.id}`] = loserId;
+            } else if (predictions[game.id]) {
+                const winnerId = predictions[game.id];
+                matchResults[`Winner Match ${game.id}`] = winnerId;
+                const hId = game._resolvedHId || game.home_team_id;
+                const aId = game._resolvedAId || game.away_team_id;
+                if (winnerId === hId) matchResults[`Loser Match ${game.id}`] = aId;
+                if (winnerId === aId) matchResults[`Loser Match ${game.id}`] = hId;
+            }
         }
     });
 
@@ -1699,8 +1760,33 @@ function renderKnockout() {
                 <div class="bracket-team ${aWinnerClass}">
                     ${aFlag} <span>${aName}</span>${aStar}
                     <span class="bracket-score">${aScoreStr}</span>
-                </div>
-            </div>`;
+                </div>`;
+            
+            if (!isFinished && hId && hId !== '0' && aId && aId !== '0') {
+                const hasPredictionFile = typeof window.MIS_PRONOSTICOS !== 'undefined';
+                const preds = hasPredictionFile ? window.MIS_PRONOSTICOS : (JSON.parse(localStorage.getItem('wc26_predictions')) || {});
+                const predictedWinner = preds[game.id] || '';
+                
+                if (hasPredictionFile) {
+                    if (predictedWinner) {
+                        const wName = teamName(predictedWinner, '');
+                        const wFlag = flagImg(predictedWinner, 'bracket-flag');
+                        html += `<div class="prediction-box readonly">
+                            <div class="pred-label">Pronóstico</div>
+                            <div class="pred-winner">${wFlag} <span>${wName}</span></div>
+                        </div>`;
+                    }
+                } else {
+                    html += `<div class="prediction-box">
+                        <select onchange="savePrediction('${game.id}', this.value)">
+                            <option value="">¿Quién gana?</option>
+                            <option value="${hId}" ${predictedWinner === hId ? 'selected' : ''}>${hName}</option>
+                            <option value="${aId}" ${predictedWinner === aId ? 'selected' : ''}>${aName}</option>
+                        </select>
+                    </div>`;
+                }
+            }
+            html += `</div>`;
         });
         
         html += `</div></div>`; // .bracket-matches, .bracket-col
@@ -1723,6 +1809,12 @@ function switchView(view) {
     const views = { groups: 0, matches: 1, knockout: 2 };
     document.getElementById(`view-${view}`).classList.add('active');
     document.querySelectorAll('.tab')[views[view]].classList.add('active');
+    
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.style.display = (view === 'knockout' && typeof window.MIS_PRONOSTICOS === 'undefined') ? 'flex' : 'none';
+    }
+    
     renderCurrentView();
 }
 
@@ -1769,6 +1861,32 @@ if ('serviceWorker' in navigator) {
 
 // PWA Install Prompt
 let deferredPrompt;
+
+function savePrediction(gameId, winnerId) {
+    const preds = JSON.parse(localStorage.getItem('wc26_predictions')) || {};
+    if (winnerId) preds[gameId] = winnerId;
+    else delete preds[gameId];
+    localStorage.setItem('wc26_predictions', JSON.stringify(preds));
+    renderKnockout(); // Re-render to propagate the winner through the bracket
+}
+
+function exportPredictions() {
+    const preds = localStorage.getItem('wc26_predictions');
+    if (!preds || preds === '{}') {
+        showToast('No hay pronósticos para guardar', true);
+        return;
+    }
+    const content = `window.MIS_PRONOSTICOS = ${preds};`;
+    const blob = new Blob([content], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mis_pronosticos.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Archivo descargado. Póngalo en su carpeta.');
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
