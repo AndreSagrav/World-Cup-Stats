@@ -1457,25 +1457,6 @@ function renderMatches() {
 
     html += `<div class="info-note">📊 <strong>Rendimiento en el Torneo (Elo)</strong> — Todos los equipos inician el Mundial en igualdad de condiciones (1500 puntos). Las probabilidades se calculan subiendo o bajando puntos basándose <strong>100% en sus resultados y diferencia de goles</strong> durante este torneo.</div>`;
 
-    // Hypothetical teams logic for Knockout
-    let hypotheticals = {};
-    let thirdPlaces = [];
-    groupsData.forEach(g => {
-        const gName = g.name.replace('Group ', '').trim();
-        if (g.teams.length >= 1) hypotheticals[`Winner Group ${gName}`] = g.teams[0].team_id;
-        if (g.teams.length >= 2) hypotheticals[`Runner-up Group ${gName}`] = g.teams[1].team_id;
-        if (g.teams.length >= 3) thirdPlaces.push(g.teams[2]);
-    });
-    thirdPlaces.sort((a, b) => {
-        const pa = parseInt(a.pts)||0, pb = parseInt(b.pts)||0;
-        if (pb !== pa) return pb - pa;
-        const gda = parseInt(a.gd)||0, gdb = parseInt(b.gd)||0;
-        if (gdb !== gda) return gdb - gda;
-        return (parseInt(b.gf)||0) - (parseInt(a.gf)||0);
-    });
-    const bestThirds = thirdPlaces.slice(0, 8).map(t => t.team_id);
-    let thirdIndex = 0;
-
     const roundsMap = { 'group': g => `Jornada ${g.matchday}`, 'r32': () => 'Treintaidosavos', 'r16': () => 'Octavos de Final', 'qf': () => 'Cuartos de Final', 'sf': () => 'Semifinales', 'third': () => 'Tercer Lugar', 'final': () => 'Gran Final' };
 
     sorted.forEach(game => {
@@ -1490,14 +1471,9 @@ function renderMatches() {
         let hId = game.home_team_id;
         let aId = game.away_team_id;
         
-        if (!hId || hId === '0') {
-            if (game.home_team_label && game.home_team_label.startsWith('3rd')) hId = bestThirds[thirdIndex++] || hId;
-            else if (game.home_team_label) hId = hypotheticals[game.home_team_label] || hId;
-        }
-        if (!aId || aId === '0') {
-            if (game.away_team_label && game.away_team_label.startsWith('3rd')) aId = bestThirds[thirdIndex++] || aId;
-            else if (game.away_team_label) aId = hypotheticals[game.away_team_label] || aId;
-        }
+        // Also respect second pass resolution from renderKnockout if available
+        if (!hId || hId === '0') hId = game._resolvedHId || hId;
+        if (!aId || aId === '0') aId = game._resolvedAId || aId;
         const hScore = game.home_score === 'null' || game.home_score === null ? '-' : game.home_score;
         const aScore = game.away_score === 'null' || game.away_score === null ? '-' : game.away_score;
         const isFinished = game.finished === 'TRUE';
@@ -1566,11 +1542,35 @@ function renderKnockout() {
 
     groupsData.forEach(g => calcGroupProb(g));
 
-    // Simply use the teams provided by the API without guessing hypotheticals
+    // User requested NO hypotheticals for knockout stage. We only show confirmed teams.
     gamesData.forEach(game => {
         if (game.type !== 'group') {
             game._resolvedHId = game.home_team_id;
             game._resolvedAId = game.away_team_id;
+        }
+    });
+
+    // Second pass: resolve "Winner Match XX" / "Loser Match XX" from finished games
+    const matchResults = {};
+    gamesData.forEach(game => {
+        if (game.type !== 'group' && game.finished === 'TRUE') {
+            const hScore = parseInt(game.home_score) || 0;
+            const aScore = parseInt(game.away_score) || 0;
+            const winnerId = hScore >= aScore ? (game._resolvedHId || game.home_team_id) : (game._resolvedAId || game.away_team_id);
+            const loserId = hScore >= aScore ? (game._resolvedAId || game.away_team_id) : (game._resolvedHId || game.home_team_id);
+            matchResults[`Winner Match ${game.id}`] = winnerId;
+            matchResults[`Loser Match ${game.id}`] = loserId;
+        }
+    });
+
+    gamesData.forEach(game => {
+        if (game.type !== 'group') {
+            if ((!game._resolvedHId || game._resolvedHId === '0') && game.home_team_label) {
+                game._resolvedHId = matchResults[game.home_team_label] || game._resolvedHId;
+            }
+            if ((!game._resolvedAId || game._resolvedAId === '0') && game.away_team_label) {
+                game._resolvedAId = matchResults[game.away_team_label] || game._resolvedAId;
+            }
         }
     });
 
